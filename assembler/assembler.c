@@ -1,22 +1,57 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
 #include "opcode.h"
 
+/* Write int32 in big-endian */
+void write_int32(FILE *out, int32_t value) {
+    unsigned char b[4];
+    b[0] = (value >> 24) & 0xFF;
+    b[1] = (value >> 16) & 0xFF;
+    b[2] = (value >> 8) & 0xFF;
+    b[3] = value & 0xFF;
+    fwrite(b, 1, 4, out);
+}
+
 int main(int argc, char *argv[]) {
+    FILE *in;
+    FILE *out;
+    char line[256];
+    char instr[32];
+    int value;
+
     if (argc != 3) {
         printf("Usage: %s input.asm output.bc\n", argv[0]);
         return 1;
     }
 
-    FILE *out = fopen(argv[2], "wb");
-    if (out == NULL) {
-        printf("Could not open output file\n");
+    in = fopen(argv[1], "r");
+    out = fopen(argv[2], "wb");
+
+    if (in == NULL || out == NULL) {
+        printf("File open error\n");
         return 1;
     }
 
-    /* Write only HALT instruction */
-    fputc(OP_HALT, out);
+    while (fgets(line, sizeof(line), in)) {
 
+        /* Check PUSH */
+        if (sscanf(line, "%s %d", instr, &value) == 2) {
+            if (strcmp(instr, "PUSH") == 0) {
+                fputc(OP_PUSH, out);
+                write_int32(out, value);
+            }
+        }
+        /* Check HALT */
+        else if (sscanf(line, "%s", instr) == 1) {
+            if (strcmp(instr, "HALT") == 0) {
+                fputc(OP_HALT, out);
+            }
+        }
+    }
+
+    fclose(in);
     fclose(out);
     return 0;
 }

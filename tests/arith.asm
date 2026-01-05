@@ -1,1 +1,2 @@
+PUSH 5
 HALT
