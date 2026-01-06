@@ -5,6 +5,12 @@
 #define OP_PUSH 0x01
 #define OP_POP  0x02
 #define OP_DUP  0x03
+#define OP_ADD 0x10
+#define OP_SUB 0x11
+#define OP_MUL 0x12
+#define OP_DIV 0x13
+#define OP_CMP 0x14
+
 
 
 
@@ -41,11 +47,6 @@ void execute(VM *vm) {
                 vm->running = false;
                 break;
 
-            default:
-                printf("Invalid opcode: 0x%02X at PC=%d\n",
-                       opcode, vm->pc - 1);
-                vm->running = false;
-                break;
             case OP_PUSH: {
                 if (vm->pc + 4 > vm->bytecode_size) {
                     printf("Invalid PUSH operand\n");
@@ -76,6 +77,52 @@ void execute(VM *vm) {
                 push(vm, vm->stack[vm->sp]);
                 break;
             }
+
+            case OP_ADD: {
+                int32_t b = pop(vm);
+                int32_t a = pop(vm);
+                push(vm, a + b);
+                break;
+            }
+
+            case OP_SUB: {
+                int32_t b = pop(vm);
+                int32_t a = pop(vm);
+                push(vm, a - b);
+                break;
+            }
+
+            case OP_MUL: {
+                int32_t b = pop(vm);
+                int32_t a = pop(vm);
+                push(vm, a * b);
+                break;
+            }
+
+            case OP_DIV: {
+                int32_t b = pop(vm);
+                int32_t a = pop(vm);
+                if (b == 0) {
+                    printf("Division by zero\n");
+                    vm->running = false;
+                    break;
+                }
+                push(vm, a / b);
+                break;
+            }
+
+            case OP_CMP: {
+                int32_t b = pop(vm);
+                int32_t a = pop(vm);
+                push(vm, (a < b) ? 1 : 0);
+                break;
+            }
+
+            default:
+                printf("Invalid opcode: 0x%02X at PC=%d\n",
+                       opcode, vm->pc - 1);
+                vm->running = false;
+                break;
 
         }
     }
