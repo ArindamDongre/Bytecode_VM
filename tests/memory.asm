@@ -1,3 +1,2 @@
-PUSH 10
+PUSH 99
 HALT
-

@@ -36,16 +36,34 @@ int main(int argc, char *argv[]) {
 
     while (fgets(line, sizeof(line), in)) {
 
-        /* Check PUSH */
+        /* Instructions with operand */
         if (sscanf(line, "%s %d", instr, &value) == 2) {
+
             if (strcmp(instr, "PUSH") == 0) {
                 fputc(OP_PUSH, out);
                 write_int32(out, value);
             }
+            else if (strcmp(instr, "JMP") == 0) {
+                fputc(OP_JMP, out);
+                write_int32(out, value);
+            }
         }
-        /* Check HALT */
+        /* Instructions without operand */
         else if (sscanf(line, "%s", instr) == 1) {
-            if (strcmp(instr, "HALT") == 0) {
+
+            if (strcmp(instr, "ADD") == 0) {
+                fputc(OP_ADD, out);
+            }
+            else if (strcmp(instr, "SUB") == 0) {
+                fputc(OP_SUB, out);
+            }
+            else if (strcmp(instr, "MUL") == 0) {
+                fputc(OP_MUL, out);
+            }
+            else if (strcmp(instr, "DIV") == 0) {
+                fputc(OP_DIV, out);
+            }
+            else if (strcmp(instr, "HALT") == 0) {
                 fputc(OP_HALT, out);
             }
         }
