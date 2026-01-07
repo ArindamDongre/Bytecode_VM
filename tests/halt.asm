@@ -1,1 +1,3 @@
+PUSH 10
 HALT
+PUSH 20
