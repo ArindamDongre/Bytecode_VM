@@ -1,2 +1,0 @@
-PUSH 99
-HALT

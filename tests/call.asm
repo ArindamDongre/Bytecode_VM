@@ -1,0 +1,5 @@
+CALL 6
+HALT
+
+PUSH 99
+RET
