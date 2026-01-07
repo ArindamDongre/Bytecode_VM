@@ -1,19 +1,7 @@
 #include "vm.h"
 #include <stdio.h>
 #include <stdlib.h>
-#define OP_HALT 0xFF
-#define OP_PUSH 0x01
-#define OP_POP  0x02
-#define OP_DUP  0x03
-#define OP_ADD 0x10
-#define OP_SUB 0x11
-#define OP_MUL 0x12
-#define OP_DIV 0x13
-#define OP_CMP 0x14
-
-
-
-
+#include "../include/opcode.h"
 
 static void push(VM *vm, int32_t value) {
     if (vm->sp >= STACK_SIZE - 1) {
@@ -32,6 +20,24 @@ static int32_t pop(VM *vm) {
     }
     return vm->stack[vm->sp--];
 }
+
+static int32_t read_int32(VM *vm) {
+    if (vm->pc + 4 > vm->bytecode_size) {
+        printf("Bytecode operand out of bounds\n");
+        vm->running = false;
+        return 0;
+    }
+
+    int32_t val =
+        (vm->bytecode[vm->pc] << 24) |
+        (vm->bytecode[vm->pc + 1] << 16) |
+        (vm->bytecode[vm->pc + 2] << 8) |
+        (vm->bytecode[vm->pc + 3]);
+
+    vm->pc += 4;
+    return val;
+}
+
 
 void execute(VM *vm) {
     while (vm->running) {
@@ -115,6 +121,52 @@ void execute(VM *vm) {
                 int32_t b = pop(vm);
                 int32_t a = pop(vm);
                 push(vm, (a < b) ? 1 : 0);
+                break;
+            }
+
+            case OP_JMP: {
+                int32_t addr = read_int32(vm);
+                if (!vm->running) break;
+
+                if (addr < 0 || addr >= vm->bytecode_size) {
+                    printf("Invalid JMP address: %d\n", addr);
+                    vm->running = false;
+                    break;
+                }
+
+                vm->pc = addr;
+                break;
+            }
+
+            case OP_JZ: {
+                int32_t addr = read_int32(vm);
+                int32_t cond = pop(vm);
+                if (!vm->running) break;
+
+                if (cond == 0) {
+                    if (addr < 0 || addr >= vm->bytecode_size) {
+                        printf("Invalid JZ address: %d\n", addr);
+                        vm->running = false;
+                        break;
+                    }
+                    vm->pc = addr;
+                }
+                break;
+            }
+
+            case OP_JNZ: {
+                int32_t addr = read_int32(vm);
+                int32_t cond = pop(vm);
+                if (!vm->running) break;
+
+                if (cond != 0) {
+                    if (addr < 0 || addr >= vm->bytecode_size) {
+                        printf("Invalid JNZ address: %d\n", addr);
+                        vm->running = false;
+                        break;
+                    }
+                    vm->pc = addr;
+                }
                 break;
             }
 

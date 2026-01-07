@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include "opcode.h"
+#include "../include/opcode.h"
 
 /* Write int32 in big-endian */
 void write_int32(FILE *out, int32_t value) {
