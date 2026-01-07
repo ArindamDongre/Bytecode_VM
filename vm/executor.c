@@ -247,6 +247,18 @@ void execute(VM *vm) {
                 vm->pc = ret_addr;
                 break;
             }
+            case OP_SWAP: {
+                   if (vm->sp < 1) {
+                   printf("SWAP needs two stack values\n");
+                   vm->running = false;
+                   break;
+                  }
+                 int32_t a = vm->stack[vm->sp];
+                 int32_t b = vm->stack[vm->sp - 1];
+                 vm->stack[vm->sp] = b;
+                 vm->stack[vm->sp - 1] = a;
+                 break;
+            }
 
             default:
                 printf("Invalid opcode: 0x%02X at PC=%d\n",
