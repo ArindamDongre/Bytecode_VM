@@ -38,6 +38,32 @@ static int32_t read_int32(VM *vm) {
     return val;
 }
 
+static void dump_stack(VM *vm) {
+    printf("Stack (bottom → top): ");
+    for (int i = 0; i <= vm->sp; i++) {
+        printf("%d ", vm->stack[i]);
+    }
+    printf("\n");
+}
+
+static void push_ret(VM *vm, int32_t addr) {
+    if (vm->rsp >= RET_STACK_SIZE - 1) {
+        printf("Return stack overflow\n");
+        vm->running = false;
+        return;
+    }
+    vm->ret_stack[++vm->rsp] = addr;
+}
+
+static int32_t pop_ret(VM *vm) {
+    if (vm->rsp < 0) {
+        printf("Return stack underflow\n");
+        vm->running = false;
+        return 0;
+    }
+    return vm->ret_stack[vm->rsp--];
+}
+
 
 void execute(VM *vm) {
     while (vm->running) {
@@ -51,6 +77,7 @@ void execute(VM *vm) {
         switch (opcode) {
             case OP_HALT:
                 vm->running = false;
+                dump_stack(vm);
                 break;
 
             case OP_PUSH: {
@@ -60,11 +87,7 @@ void execute(VM *vm) {
                     break;
                 }
 
-                int32_t val = (vm->bytecode[vm->pc] << 24) |
-                            (vm->bytecode[vm->pc + 1] << 16) |
-                            (vm->bytecode[vm->pc + 2] << 8) |
-                            (vm->bytecode[vm->pc + 3]);
-                vm->pc += 4;
+                int32_t val = read_int32(vm);
 
                 push(vm, val);
                 break;
@@ -167,6 +190,61 @@ void execute(VM *vm) {
                     }
                     vm->pc = addr;
                 }
+                break;
+            }
+
+            case OP_STORE: {
+                int32_t idx = read_int32(vm);
+                int32_t val = pop(vm);
+                if (!vm->running) break;
+
+                if (idx < 0 || idx >= MEM_SIZE) {
+                    printf("Invalid memory index in STORE: %d\n", idx);
+                    vm->running = false;
+                    break;
+                }
+
+                vm->memory[idx] = val;
+                break;
+            }
+
+            case OP_LOAD: {
+                int32_t idx = read_int32(vm);
+                if (!vm->running) break;
+
+                if (idx < 0 || idx >= MEM_SIZE) {
+                    printf("Invalid memory index in LOAD: %d\n", idx);
+                    vm->running = false;
+                    break;
+                }
+
+                push(vm, vm->memory[idx]);
+                break;
+            }
+
+            case OP_CALL: {
+                int32_t addr = read_int32(vm);
+                if (!vm->running) break;
+
+                if (addr < 0 || addr >= vm->bytecode_size) {
+                    printf("Invalid CALL address: %d\n", addr);
+                    vm->running = false;
+                    break;
+                }
+
+                /* Save return address (current PC) */
+                push_ret(vm, vm->pc);
+
+                /* Jump to function */
+                vm->pc = addr;
+                break;
+            }
+
+            case OP_RET: {
+                int32_t ret_addr = pop_ret(vm);
+                if (!vm->running) break;
+
+                vm->pc = ret_addr;
                 break;
             }
 
