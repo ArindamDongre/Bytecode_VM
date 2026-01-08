@@ -9,19 +9,22 @@ Stack-based bytecode virtual machine with assembler.
 - vm/: VM execution engine
 - assembler/: Assembly → bytecode translator
 - tests/: Sample programs
-- docs/: Instruction set specification
+- include/: opcodes
 
 ## Build
 
 ```bash
 make
 ```
+
 ## Assemble
 
 ```
 ./assembler_exec tests/arith.asm arith.bin
 ```
+
 ## Run
+
 ```
 ./vm_exec arith.bin
 ```
