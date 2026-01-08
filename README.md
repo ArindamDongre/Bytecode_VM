@@ -16,3 +16,12 @@ Stack-based bytecode virtual machine with assembler.
 ```bash
 make
 ```
+## Assemble
+
+```
+./assembler_exec tests/arith.asm arith.bin
+```
+## Run
+```
+./vm_exec arith.bin
+```
